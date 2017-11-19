@@ -3,10 +3,26 @@
 /// \brief LiquidCrystal library with PCF8574 I2C adapter.
 ///
 /// \author Matthias Hertel, http://www.mathertel.de
+/// 
+/// \copyright Copyright (C) 2006-2008 Hans-Christoph Steiner. All rights reserved.
+/// \copyright Copyright (c) 2010 Arduino LLC. All right reserved.
 /// \copyright Copyright (c) 2014 by Matthias Hertel.\n
-/// This work is licensed under a BSD style license.\n
+/// 
+/// This library is derived from the original Arduino LiquidCrystal library
+/// and uses the original Wire library for communication.
+/// 
+/// From Arduino: 
+/// This library is free software; you can redistribute it and/or
+/// modify it under the terms of the GNU Lesser General Public
+/// License as published by the Free Software Foundation; either
+/// version 2.1 of the License, or (at your option) any later version.
+/// 
+/// From Author:
+/// The extended work is licensed under a BSD style license.\n
 /// See http://www.mathertel.de/License.aspx
 /// 
+/// Both License rules apply.
+///
 /// \details
 /// This is a library for driving LiquidCrystal displays (LCD) by using the I2C bus and an PCF8574 I2C adapter.
 /// This library is derived from the original Arduino LiquidCrystal library and uses the original Wire library for communication.

@@ -2,10 +2,7 @@
 /// \file LiquidCrystal_PCF8574.cpp
 /// \brief LiquidCrystal (LCD) library with PCF8574 I2C adapter.
 ///
-/// \author Matthias Hertel, http://www.mathertel.de
-/// \copyright Copyright (c) 2014 by Matthias Hertel.\n
-/// This work is licensed under a BSD style license.\n
-/// See http://www.mathertel.de/License.aspx
+/// \copyright see: LiquidCrystal_PCF8574.h
 /// 
 /// \details
 /// This is a library for driving LiquidCrystal displays (LCD) by using the I2C bus and an PCF8574 I2C adapter.
