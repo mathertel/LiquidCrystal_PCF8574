@@ -88,11 +88,30 @@ void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) 
   // according to datasheet, we need at least 40ms after power rises above 2.7V
   // before sending commands. Arduino can turn on way befor 4.5V so we'll wait 50
   Wire.begin();
-
+  
   // initializing th display
   _write2Wire(0x00, LOW, false);
   delayMicroseconds(50000); 
 
+  // Test for PCF8574 address range: 0x20 to 0x27
+  //      or PCF8574A address range: 0x38 to 0x3f
+  //      set _Addr to the tested value that responds
+  // It's a bit crude but solves the cheap LCD backpack from China problem.
+  if (_Addr == 0x00) {
+     for (int i = 0x20; i < 0x28; i++) {
+       Wire.beginTransmission(i);
+       if (Wire.endTransmission() == 0) {
+         _Addr = i;
+       }
+     }
+     for (int i = 0x38; i < 0x40; i++) {
+       Wire.beginTransmission(i);
+       if (Wire.endTransmission() == 0) {
+         _Addr = i;
+       }
+     }
+  }
+  
   // put the LCD into 4 bit mode according to the hitachi HD44780 datasheet figure 26, pg 47
   _sendNibble(0x03, RSMODE_CMD);
   delayMicroseconds(4500); 
