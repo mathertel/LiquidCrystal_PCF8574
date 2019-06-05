@@ -23,8 +23,11 @@
 #ifndef LiquidCrystal_PCF8574_h
 #define LiquidCrystal_PCF8574_h
 
+#include "Arduino.h"
 #include "Print.h"
-#include <inttypes.h>
+#include <stddef.h>
+#include <stdint.h>
+
 
 class LiquidCrystal_PCF8574 : public Print
 {
@@ -57,20 +60,25 @@ public:
   void createChar(int, int[]);
 
   // plus functions from LCDAPI:
-
-  // void setDelay(int Cmd, int Char);
-  void command(int value);
   void clear(); // same as init()
-  // setCursor() from LCDAPI
-
   void setBacklight(int brightness);
 
+  // support of Print class
   virtual size_t write(uint8_t ch);
-  // using Print::write;
+  using Print::write;
 
 private:
+  // instance variables
   int _i2cAddr; ///< Wire Address of the LCD
   int _backlight; ///< the backlight intensity
+  int _lines; ///< number of lines of the display
+  int _entrymode; ///<flags from entrymode
+  int _displaycontrol; ///<flags from displaycontrol
+
+  // low level functions
+  void _send(int value, bool isData = false);
+  void _sendNibble(int halfByte, bool isData = false);
+  void _write2Wire(int halfByte, bool isData, bool enable);
 };
 
 #endif
