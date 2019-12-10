@@ -57,7 +57,7 @@ public:
   void noAutoscroll();
   void leftToRight();
   void rightToLeft();
-  void createChar(int, int[]);
+  void createChar(int, byte[]);
 
   // plus functions from LCDAPI:
   void clear(); // same as init()

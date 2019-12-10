@@ -219,7 +219,7 @@ void LiquidCrystal_PCF8574::setBacklight(int brightness)
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidCrystal_PCF8574::createChar(int location, int charmap[])
+void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
 {
   location &= 0x7; // we only have 8 locations 0-7
   // Set CGRAM address
