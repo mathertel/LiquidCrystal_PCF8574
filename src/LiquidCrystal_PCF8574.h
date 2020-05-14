@@ -19,6 +19,7 @@
 /// --------
 /// * 19.10.2013 created.
 /// * 05.06.2019 rewrite from scratch.
+/// 07/03/2020 P.HENRY  optimise use of I2C & adjust init sequence
 
 #ifndef LiquidCrystal_PCF8574_h
 #define LiquidCrystal_PCF8574_h
@@ -76,9 +77,11 @@ private:
   int _displaycontrol; ///<flags from displaycontrol
 
   // low level functions
-  void _send(int value, bool isData = false);
-  void _sendNibble(int halfByte, bool isData = false);
-  void _write2Wire(int halfByte, bool isData, bool enable);
+  void _send(byte value, bool isData = false);
+  void _sendNibble(byte halfByte, bool isData = false);
+  //void _write2Wire(byte halfByte, bool isData, bool enable);
+  void _writeLCD(byte halfByte, bool isData);
 };
 
 #endif
+
