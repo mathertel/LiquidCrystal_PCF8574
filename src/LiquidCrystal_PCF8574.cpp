@@ -35,7 +35,6 @@ void LiquidCrystal_PCF8574::begin(int cols, int lines)
 {
   // _cols = cols ignored !
   _lines = lines;
-
   int functionFlags = 0;
 
   if (lines > 1) {
@@ -59,7 +58,9 @@ void LiquidCrystal_PCF8574::begin(int cols, int lines)
   _sendNibble(0x02);   // finally, set to 4-bit interface
   _send(0x24 | functionFlags); 
   
-  clear();
+  //clear();
+   _send(0x01);
+  delayMicroseconds(1000);
   display();
   leftToRight();   // no need
 } // begin()
@@ -73,8 +74,17 @@ void LiquidCrystal_PCF8574::clear()
   // now LCD is blind (clear is long ) unless if it was in 8 bit mode
   // so try to reset it in 8 bit mode (next clear will work fine)
   _sendNibble(0x02); // will be ignored if LCD is clearing
-  delayMicroseconds(1100); // this command takes 1.5ms!  - 400ms of I2C write 
-  _send(0x08 | _displaycontrol);  // just in case of LCD power up
+  delayMicroseconds(1000); // this command takes 1.5ms!  - 400ms of I2C write 
+  int functionFlags = 0;
+
+  if (_lines > 1) {
+    functionFlags |= 0x08;
+  }
+  // reset LCD same as it was in case of power loss
+  _send(0x24 | functionFlags); 
+  _send(0x04 | _entrymode);
+  _send(0x08 | _displaycontrol);
+  _send(0x80);   
 } // clear()
 
 
