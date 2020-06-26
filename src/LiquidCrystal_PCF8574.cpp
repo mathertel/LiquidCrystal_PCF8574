@@ -10,25 +10,50 @@
 
 #include <Wire.h>
 
-/// Definitions on how the PCF8574 is connected to the LCD
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr)
+{
+  // default pin assignment
+  init(i2cAddr, 0, 1, 2, 4, 5, 6, 7, 3);
+} // LiquidCrystal_PCF8574
 
-/// These are Bit-Masks for the special signals and background light
-#define PCF_RS 0x01
-#define PCF_RW 0x02
-#define PCF_EN 0x04
-#define PCF_BACKLIGHT 0x08
-// the 0xF0 bits are used for 4-bit data to the display.
+// constructors, which allows to redefine bit assignments in case your adapter is wired differently
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
+{
+  init(i2cAddr, rs, 255, enable, d4, d5, d6, d7, backlight);
+} // LiquidCrystal_PCF8574
 
-// a nibble is a half Byte
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
+{
+  init(i2cAddr, rs, rw, enable, d4, d5, d6, d7, backlight);
+} // LiquidCrystal_PCF8574
 
-LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(int i2cAddr)
+void LiquidCrystal_PCF8574::init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
 {
   _i2cAddr = i2cAddr;
   _backlight = 0;
 
   _entrymode = 0x02; // like Initializing by Internal Reset Circuit
   _displaycontrol = 0x04;
-} // LiquidCrystal_PCF8574
+
+  _rs_mask = 0x01 << rs;
+  if (rw != 255)
+    _rw_mask = 0x01 << rw;
+  else
+    _rw_mask = 0;
+  _enable_mask = 0x01 << enable;
+  _data_mask[0] = 0x01 << d4;
+  _data_mask[1] = 0x01 << d5;
+  _data_mask[2] = 0x01 << d6;
+  _data_mask[3] = 0x01 << d7;
+
+  if (backlight != 255)
+    _backlight_mask = 0x01 << backlight;
+  else
+    _backlight_mask = 0;
+} // init()
 
 
 void LiquidCrystal_PCF8574::begin(int cols, int lines)
@@ -56,7 +81,7 @@ void LiquidCrystal_PCF8574::begin(int cols, int lines)
   _displaycontrol = 0x04;
   _entrymode = 0x02;
 
-  // sequence to reset. see "Initializing by Instruction" in datatsheet
+  // sequence to reset. see "Initializing by Instruction" in datasheet
   _sendNibble(0x03);
   delayMicroseconds(4500);
   _sendNibble(0x03);
@@ -80,12 +105,6 @@ void LiquidCrystal_PCF8574::clear()
   _send(0x01);
   delayMicroseconds(1600); // this command takes 1.5ms!
 } // clear()
-
-
-void LiquidCrystal_PCF8574::init()
-{
-  clear();
-} // init()
 
 
 void LiquidCrystal_PCF8574::home()
@@ -241,12 +260,12 @@ void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
 inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
 {
   _send(ch, true);
-  return 1; // assume sucess
+  return 1; // assume success
 } // write()
 
 
 // write either command or data
-void LiquidCrystal_PCF8574::_send(int value, bool isData)
+void LiquidCrystal_PCF8574::_send(uint8_t value, bool isData)
 {
   // write high 4 bits
   _sendNibble((value >> 4 & 0x0F), isData);
@@ -258,30 +277,35 @@ void LiquidCrystal_PCF8574::_send(int value, bool isData)
 // write a nibble / halfByte with handshake
 void LiquidCrystal_PCF8574::_sendNibble(int halfByte, bool isData)
 {
-  _write2Wire(halfByte, isData, true);
+  // map the data to the given pin connections
+  uint8_t data = 0;
+
+  // allow for arbitrary pin configuration
+  if (halfByte & 0x01) data |= _data_mask[0];
+  if (halfByte & 0x02) data |= _data_mask[1];
+  if (halfByte & 0x04) data |= _data_mask[2];
+  if (halfByte & 0x08) data |= _data_mask[3];
+
+  _write2Wire(data, isData, true);
   delayMicroseconds(1); // enable pulse must be >450ns
-  _write2Wire(halfByte, isData, false);
+  _write2Wire(data, isData, false);
   delayMicroseconds(37); // commands need > 37us to settle
 } // _sendNibble
 
 
 // private function to change the PCF8674 pins to the given value
-// Note:
-// you may change this function what the display is attached to the PCF8574 in a different wiring.
-void LiquidCrystal_PCF8574::_write2Wire(int halfByte, bool isData, bool enable)
+void LiquidCrystal_PCF8574::_write2Wire(uint8_t data, bool isData, bool enable)
 {
-  // map the given values to the hardware of the I2C schema
-  int i2cData = halfByte << 4;
   if (isData)
-    i2cData |= PCF_RS;
-  // PCF_RW is never used.
+    data |= _rs_mask;
+  // _rw_mask is not used here.
   if (enable)
-    i2cData |= PCF_EN;
+    data |= _enable_mask;
   if (_backlight > 0)
-    i2cData |= PCF_BACKLIGHT;
+    data |= _backlight_mask;
 
   Wire.beginTransmission(_i2cAddr);
-  Wire.write(i2cData);
+  Wire.write(data);
   Wire.endTransmission();
 } // write2Wire
 

@@ -9,8 +9,8 @@
 /// See http://www.mathertel.de/License.aspx
 ///
 /// \details
-/// This library is can drive a Liquid Cristal display based on the Hitachi HD44780 chip that is connected through a PCF8574 I2C adapter.
-/// This is given by many (not all) LCD adapters. This library uses the original Wire library for communication.
+/// This library can drive a Liquid Cristal display based on the Hitachi HD44780 chip that is connected 
+/// through a PCF8574 I2C adapter. It uses the original Wire library for communication.
 /// The API if common to many LCD libraries and documented in https://www.arduino.cc/en/Reference/LiquidCrystal.
 /// and partially functions from https://playground.arduino.cc/Code/LCDAPI/.
 
@@ -32,16 +32,20 @@
 class LiquidCrystal_PCF8574 : public Print
 {
 public:
-  LiquidCrystal_PCF8574(int i2cAddr);
+  LiquidCrystal_PCF8574(uint8_t i2cAddr);
   // note:
   // There is no sda and scl parameter for i2c in any api.
   // The Wire library has standard settings that can be overwritten by using Wire.begin(int sda, int scl) before calling LiquidCrystal_PCF8574::begin();
 
+  // constructors, which allows to redefine bit assignments in case your adapter is wired differently
+  LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
+  LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
+
   // Funtions from reference:
 
   void begin(int cols, int rows);
-
-  void init();
 
   void home();
   void setCursor(int col, int row);
@@ -60,13 +64,12 @@ public:
   void createChar(int, byte[]);
 
   // plus functions from LCDAPI:
-  void clear(); // same as init()
+  void clear();
   void setBacklight(int brightness);
   inline void command(uint8_t value) { _send(value); }
 
   // support of Print class
   virtual size_t write(uint8_t ch);
-  using Print::write;
 
 private:
   // instance variables
@@ -78,10 +81,21 @@ private:
   int _displaycontrol; ///<flags from displaycontrol
   int _row_offsets[4];
   
+  // variables describing how the PCF8574 is connected to the LCD
+  uint8_t _rs_mask;
+  uint8_t _rw_mask;
+  uint8_t _enable_mask;
+  uint8_t _backlight_mask;
+  // these are used for 4-bit data to the display.
+  uint8_t _data_mask[4];
+
   // low level functions
-  void _send(int value, bool isData = false);
+  void _send(uint8_t value, bool isData = false);
   void _sendNibble(int halfByte, bool isData = false);
-  void _write2Wire(int halfByte, bool isData, bool enable);
+  void _write2Wire(uint8_t data, bool isData, bool enable);
+
+  void init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
 };
 
 #endif
