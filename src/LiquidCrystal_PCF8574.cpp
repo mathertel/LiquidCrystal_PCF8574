@@ -237,6 +237,21 @@ void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
 } // createChar()
 
 
+#ifdef __AVR__
+// Allows us to fill the first 8 CGRAM locations
+// with custom characters stored in PROGMEM
+void LiquidCrystal_PCF8574::createChar_P(uint8_t location, const byte *charmap) {
+  PGM_P p = reinterpret_cast<PGM_P>(charmap);
+  location &= 0x7; // we only have 8 locations 0-7
+  _send(0x40 | (location << 3));
+  for (int i = 0; i < 8; i++) {
+    byte c = pgm_read_byte(p++);
+    write(c);
+  }
+} // createCharPgm()
+#endif
+
+
 /* The write function is needed for derivation from the Print class. */
 inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
 {
