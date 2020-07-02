@@ -1,7 +1,10 @@
-#include <LiquidCrystal_PCF8574.h>
+#include "ESP8266.h"
+#include "LiquidCrystal_PCF8574.h"
 #include <Wire.h>
+#define LCD_I2CADR  0x4E / 2  //adresse LCD
 
-LiquidCrystal_PCF8574 lcd(0x27); // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+LiquidCrystal_PCF8574 lcd(LCD_I2CADR); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 int show = -1;
 
@@ -13,25 +16,27 @@ void setup()
   Serial.println("LCD...");
 
   // wait on Serial to be available on Leonardo
-  while (!Serial)
-    ;
+  while (!Serial);
 
   Serial.println("Dose: check for LCD");
 
   // See http://playground.arduino.cc/Main/I2cScanner how to test for a I2C device.
-  Wire.begin();
-  Wire.beginTransmission(0x27);
+    //Init I2C
+//  Wire.begin();
+  Wire.begin(I2C_SDA, I2C_SCL);
+
+  Wire.beginTransmission(LCD_I2CADR);
   error = Wire.endTransmission();
-  Serial.print("Error: ");
+  Serial.print("I2C Status: ");
   Serial.print(error);
 
   if (error == 0) {
-    Serial.println(": LCD found.");
+    Serial.println(" LCD found.");
     show = 0;
     lcd.begin(16, 2); // initialize the lcd
 
   } else {
-    Serial.println(": LCD not found.");
+    Serial.println(" LCD not found.");
   } // if
 
 } // setup()
