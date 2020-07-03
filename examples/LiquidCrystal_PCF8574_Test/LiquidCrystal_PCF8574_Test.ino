@@ -33,7 +33,7 @@ void setup()
   if (error == 0) {
     Serial.println(" LCD found.");
     show = 0;
-    lcd.begin(16, 2); // initialize the lcd
+    lcd.begin(20, 4); // initialize the lcd
 
   } else {
     Serial.println(" LCD not found.");
@@ -98,13 +98,26 @@ void loop()
     lcd.scrollDisplayRight();
 
   } else if (show == 12) {
-    lcd.clear();
-    lcd.print("write-");
+//    lcd.clear();
+    lcd.print(LCD_CLEAR "write-");
 
-  } else if (show > 12) {
+  } else if (show > 12 && show < 16) {
     lcd.print(show - 13);
+  } else if (show == 16) {
+    lcd.println(LCD_CLEAR "Hello world");
+    lcd.println("Very long line of 30 chars ...");
+    lcd.println("Last Line");
+  } else if (show == 17) {
+    lcd.println(">-" LCD_CLREOL "clear");
+  } else if (show == 18) {
+    lcd.println(">-" LCD_CLREOL "line");
+  } else if (show == 19) {
+    lcd.println(">-" LCD_CLREOL "by");
+  } else if (show == 20) {
+    lcd.println(">-" LCD_CLREOL "line");
+    
   } // if
 
   delay(1400);
-  show = (show + 1) % 16;
+  show = (show + 1) % 22;
 } // loop()

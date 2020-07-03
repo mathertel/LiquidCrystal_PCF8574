@@ -33,58 +33,57 @@ LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(int i2cAddr)
 
 void LiquidCrystal_PCF8574::begin(int cols, int lines)
 {
-  // _cols = cols ignored !
+  _cols = cols;
   _lines = lines;
-  int functionFlags = 0;
-
-  if (lines > 1) {
-    functionFlags |= 0x08;
-  }
 
   // initializing the display
   Wire.begin();
- 
+
   // after reset the mode is this
   _displaycontrol = 0x04;       // Increment no shift
   _entrymode = 0x02;            // display on & no cursor
-  _sendNibble(0x00,true);       //to setup  RS up and E down after power up 
-  // delayMicroseconds(200);    // no need I2C delay is enough
-  _sendNibble(0x03);
- 
-  _sendNibble(0x03);
-  //delayMicroseconds(200);  // no need I2C delay is enough
-  _sendNibble(0x03);
-  //delayMicroseconds(200);  //  no need I2C delay is enough
-  _sendNibble(0x02);   // finally, set to 4-bit interface
-  _send(0x24 | functionFlags); 
-  
-  //clear();
-   _send(0x01);
-  delayMicroseconds(1000);
+  // Init is now 100% in clear or init function
+  //  _sendNibble(0x00, true);      //to setup  RS up and E down after power up
+  //  // delayMicroseconds(200);    // no need I2C delay is enough
+  //  _sendNibble(0x03);
+  //
+  //  _sendNibble(0x03);
+  //  //delayMicroseconds(200);  // no need I2C delay is enough
+  //  _sendNibble(0x03);
+  //  //delayMicroseconds(200);  //  no need I2C delay is enough
+  //  _sendNibble(0x02);   // finally, set to 4-bit interface
+  //  _send(0x24 | functionFlags);
+  clear();   // all reinit of LCD register are done here
+  //_send(0x01);
+  //delayMicroseconds(1000);
   display();
-  leftToRight();   // no need
+  leftToRight();
 } // begin()
 
-
+// do aclear and a full reinit
 void LiquidCrystal_PCF8574::clear()
 {
   // Instruction: Clear display = 0x01
   _send(0x01);
   // here we try to force LCD back to 4 bit mode in case of power loss
   // now LCD is blind (clear is long ) unless if it was in 8 bit mode
-  // so try to reset it in 8 bit mode (next clear will work fine)
-  _sendNibble(0x02); // will be ignored if LCD is clearing
-  delayMicroseconds(1000); // this command takes 1.5ms!  - 400ms of I2C write 
+  // so try to reset it in 8 bit mode (a second clear is send in case of reset)
+  _sendNibble(0x02); // mode 4 bit  will be ignored if LCD is clearing
+  delayMicroseconds(1200); // this command takes 1.5ms!  - 4ms of I2C write
   int functionFlags = 0;
 
   if (_lines > 1) {
-    functionFlags |= 0x08;
+    functionFlags = 0x08;
   }
-  // reset LCD same as it was in case of power loss
-  _send(0x24 | functionFlags); 
+  // reset LCD registers
+  _send(0x24 | functionFlags); // 2C if 2 lines
   _send(0x04 | _entrymode);
   _send(0x08 | _displaycontrol);
-  _send(0x80);   
+  //  _send(0x80);   // home
+  _send(0x01);   // second clear to really clear if lcd was not init
+  delayMicroseconds(1200); // this command takes 1.5ms!  - 4ms of I2C write
+  _row = 0;
+  _col = 0;
 } // clear()
 
 
@@ -96,20 +95,30 @@ void LiquidCrystal_PCF8574::init()
 
 void LiquidCrystal_PCF8574::home()
 {
+  setCursor(0, 0);
   // Instruction: Return home = 0x02
-  _send(0x02);
+  //  _send(0x02);
 
-  delayMicroseconds(1500); // this command takes 1.5ms! ONLY With Shift ON
-  //  _send(0x80);               // so use setcursor 0 0 no delay (if you dont use shift)
+  //  delayMicroseconds(1500); // this command takes 1.5ms! ONLY With Shift ON
+  // _send(0x80);               // so use setcursor 0 0 no delay (if you dont use shift)
 } // home()
 
-
-/// Set the cursor to a new position.
-void LiquidCrystal_PCF8574::setCursor(int col, int row)
+/// Set the cursor to a new position but update lcd only if needed
+void LiquidCrystal_PCF8574::setCursor(byte col, byte  row)
 {
-  int row_offsets[] = {0x00, 0x40, 0x14, 0x54};
+  if (_col != col || _row != row) setCursorLCD(col, row);
+} // setCursor()
+
+/// Set the cursor to a new position on lcd
+void LiquidCrystal_PCF8574::setCursorLCD(byte col, byte row)
+{
+  col %= _cols;
+  row %= _lines; 
+  byte row_offsets[] = {0x00, 0x40, 0x14, 0x54};
   // Instruction: Set DDRAM address = 0x80
-  _send(0x80 | (row_offsets[row] + col));
+  _send(0x80 | ((row_offsets[row] ) + col));
+  _col = col;
+  _row = row;
 } // setCursor()
 
 
@@ -226,7 +235,7 @@ void LiquidCrystal_PCF8574::setBacklight(int brightness)
 {
   _backlight = brightness;
   // send no data but set the background-pin right;
-  _writeLCD(0x00, false);
+  _writePCF(0x00, false);
 } // setBacklight()
 
 
@@ -238,29 +247,46 @@ void LiquidCrystal_PCF8574::createChar(int location, int charmap[])
   // Set CGRAM address
   _send(0x40 | (location << 3));
   for (int i = 0; i < 8; i++) {
-    write(charmap[i]);
+    writeLCD(charmap[i]);
   }
 } // createChar()
 
-
 /* The write function is needed for derivation from the Print class. */
-inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
+size_t LiquidCrystal_PCF8574::write(uint8_t ch) {
+  switch (ch) {
+    case '\x01': clear(); break;
+    case '\x02': home(); break;
+    case '\x03': {
+      for (byte N = _col; N<_cols; N++) writeLCD(' ');
+      setCursorLCD(_col,_row);
+      break;
+    }
+    case '\r': setCursorLCD(0,_row); break;
+    case '\n': setCursorLCD(_col,_row+1); break;
+    default:
+      writeLCD(ch);
+      if (_col++ >= _cols) {
+        setCursorLCD(0, _row +1);
+      }
+  }
+  return 1;
+}
+
+// write any char
+inline void LiquidCrystal_PCF8574::writeLCD(uint8_t ch)
 {
   _send(ch, true);
-  return 1; // assume sucess
 } // write()
 
 
 // write either command or data
 void LiquidCrystal_PCF8574::_send(byte value, bool isData)
 {
-   Wire.beginTransmission(_i2cAddr);
-   // write high 4 bits
-  byte halfByte = (value >> 4);
-  _writeLCD(halfByte, isData);
+  Wire.beginTransmission(_i2cAddr);
+  // write high 4 bits
+  _writePCF((value >> 4), isData);
   // write low 4 bits
-  halfByte = (value & 0x0F);
-  _writeLCD(halfByte, isData);
+  _writePCF((value & 0x0F), isData);
   Wire.endTransmission();
 } // _send()
 
@@ -269,8 +295,8 @@ void LiquidCrystal_PCF8574::_send(byte value, bool isData)
 void LiquidCrystal_PCF8574::_sendNibble(byte halfByte, bool isData)
 {
   Wire.beginTransmission(_i2cAddr);
-  _writeLCD(halfByte, halfByte);
-    Wire.endTransmission();
+  _writePCF(halfByte, isData);
+  Wire.endTransmission();
 } // _sendNibble
 
 
@@ -278,32 +304,32 @@ void LiquidCrystal_PCF8574::_sendNibble(byte halfByte, bool isData)
 // Note:
 // you may change this function what the display is attached to the PCF8574 in a different wiring.
 //void LiquidCrystal_PCF8574::_write2Wire(byte halfByte, bool isData, bool enable)
-void LiquidCrystal_PCF8574::_writeLCD(byte halfByte, bool isData)
+void LiquidCrystal_PCF8574::_writePCF(byte halfByte, bool isData)
 {
   // map the given values to the hardware of the I2C schema
- static bool i2cDataState = LOW;  //  nasty way to keep track of RS state :)
-        byte i2cData = halfByte << 4;
-        
-    // PCF_RW is never used.
-    
+  static bool i2cDataState = LOW;  //  nasty way to keep track of RS state :)
+  byte i2cData = halfByte << 4;
+
+  // PCF_RW is never used.
+
   if (_backlight > 0)
     i2cData |= PCF_BACKLIGHT;
 
   if (isData)
     i2cData |= PCF_RS;
-    
+
   // if RS change it is important to setup RS before setting EN high
   // to respect the timing setup.  few nano sec are needed but no choice here : 1 more I2Cwrite (100micro sec)
-  // its work without but make your display more robust if power is low
-  // see chaper 7.1 Write timing of LCD documentation  P.HENRY 02/2018
+  // in fact its work without if power is full 5V  but make your display more robust if power is low
+  // see chaper 7.1 Write timing of LCD documentation  NET234 02/2018
   if  (i2cDataState != i2cData) {
     i2cDataState = i2cData;
-    Wire.write(i2cData);  
+    Wire.write(i2cData);
   }
 
   Wire.write( i2cData | PCF_EN);   //  EN is up
-  //  delayMicroseconds(37); // commands need > 37us to settle  
-  //  yes but I2C need 100us to write  :) 
+  //  delayMicroseconds(37); // commands need > 37us to settle
+  //  yes but I2C need 100us to write  :)
   Wire.write(i2cData);             // EN is down
 } // write2Wire
 
