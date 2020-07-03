@@ -6,7 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-LiquidCrystal_PCF8574 KEYWORD1
+LiquidCrystal_PCF8574	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
