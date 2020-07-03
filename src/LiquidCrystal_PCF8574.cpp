@@ -33,7 +33,7 @@ LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(int i2cAddr)
 
 void LiquidCrystal_PCF8574::begin(int cols, int lines)
 {
-  // _cols = cols ignored !
+  (void)cols; // ignored !
   _lines = lines;
 
   int functionFlags = 0;
