@@ -19,6 +19,15 @@
 /// --------
 /// * 19.10.2013 created.
 /// * 05.06.2019 rewrite from scratch.
+/// add by NET234
+/// 07/03/2020   optimise use of I2C to limit use of wire.beginTransmission 
+/// 02/07/2020   optimise clear to full reinit LCD (allow cuting power and re initialise with a clear() or Serial.print( LCD_CLEAR )
+///              add special char CLEAR HOME CLREOL and handle /r /n in print  so println works to go next line
+
+# define LCD_CLEAR   "\x01"  // do a fulll reinit of lcd : clear()
+# define LCD_HOME    "\x02"  // fast home
+# define LCD_CLREOL  "\x03"  // clear to end of line without moving cursor :)  usefull
+
 
 #ifndef LiquidCrystal_PCF8574_h
 #define LiquidCrystal_PCF8574_h
@@ -44,7 +53,8 @@ public:
   void init();
 
   void home();
-  void setCursor(int col, int row);
+  void setCursor(byte col, byte row);
+  void setCursorLCD(byte col, byte row);
   void cursor();
   void noCursor();
   void blink();
@@ -57,28 +67,32 @@ public:
   void noAutoscroll();
   void leftToRight();
   void rightToLeft();
-  void createChar(int, byte[]);
+  void createChar(int, int[]);
 
   // plus functions from LCDAPI:
   void clear(); // same as init()
   void setBacklight(int brightness);
+  void writeLCD(uint8_t ch);   //write any char to LCD (needed to build special char)
 
   // support of Print class
-  virtual size_t write(uint8_t ch);
+  virtual size_t write(uint8_t ch);   //write with dealing /r /n /x01 /x02 /x03
   using Print::write;
 
 private:
   // instance variables
-  int _i2cAddr; ///< Wire Address of the LCD
-  int _backlight; ///< the backlight intensity
-  int _lines; ///< number of lines of the display
-  int _entrymode; ///<flags from entrymode
-  int _displaycontrol; ///<flags from displaycontrol
-
+  byte _i2cAddr; ///< Wire Address of the LCD
+  byte _backlight; ///< the backlight intensity
+  byte _lines; ///< number of lines of the display
+  byte _cols;  ///< number of cols to display
+  byte _row;  ///actual cursor Line position
+  byte _col;   ///actual cursor Col  position
+  byte _entrymode; ///<flags from entrymode
+  byte _displaycontrol; ///<flags from displaycontrol
   // low level functions
-  void _send(int value, bool isData = false);
-  void _sendNibble(int halfByte, bool isData = false);
-  void _write2Wire(int halfByte, bool isData, bool enable);
+  void _send(byte value, bool isData = false);
+  void _sendNibble(byte halfByte, bool isData = false);
+  //void _write2Wire(byte halfByte, bool isData, bool enable);
+  void _writePCF(byte halfByte, bool isData);
 };
 
 #endif

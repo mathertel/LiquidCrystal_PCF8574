@@ -1,7 +1,7 @@
 #include <LiquidCrystal_PCF8574.h>
 #include <Wire.h>
+#define LCD_I2CADR  0x4E / 2  //adresse LCD
 
-LiquidCrystal_PCF8574 lcd(0x27); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 int show = -1;
 
@@ -10,25 +10,26 @@ void setup()
   int error;
 
   Serial.begin(115200);
-  Serial.println("LCD...");
-
   // wait on Serial to be available on Leonardo
-  while (!Serial)
-    ;
+  while (!Serial);
+  
+  Serial.println("LCD...");
 
   Serial.println("Dose: check for LCD");
 
   // See http://playground.arduino.cc/Main/I2cScanner how to test for a I2C device.
+  //Init I2C
   Wire.begin();
-  Wire.beginTransmission(0x27);
+  Wire.beginTransmission(LCD_I2CADR);
   error = Wire.endTransmission();
-  Serial.print("Error: ");
+  Serial.print("I2C Status: ");
   Serial.print(error);
 
   if (error == 0) {
     Serial.println(": LCD found.");
     show = 0;
-    lcd.begin(16, 2); // initialize the lcd
+    lcd.begin(20, 4); // initialize the lcd
+//    lcd.begin(16, 2); // initialize the lcd
 
   } else {
     Serial.println(": LCD not found.");
@@ -93,13 +94,26 @@ void loop()
     lcd.scrollDisplayRight();
 
   } else if (show == 12) {
-    lcd.clear();
-    lcd.print("write-");
+    //    lcd.clear();
+    lcd.print(LCD_CLEAR "write-");
 
-  } else if (show > 12) {
+  } else if (show > 12 && show < 16) {
     lcd.print(show - 13);
+  } else if (show == 16) {
+    lcd.println(LCD_CLEAR "Hello world");
+    lcd.println("Very long line of 30 chars ...");
+    lcd.println("Last Line");
+  } else if (show == 17) {
+    lcd.println(">-" LCD_CLREOL "clear");
+  } else if (show == 18) {
+    lcd.println(">-" LCD_CLREOL "line");
+  } else if (show == 19) {
+    lcd.println(">-" LCD_CLREOL "by");
+  } else if (show == 20) {
+    lcd.println(">-" LCD_CLREOL "line");
+
   } // if
 
   delay(1400);
-  show = (show + 1) % 16;
+  show = (show + 1) % 22;
 } // loop()
