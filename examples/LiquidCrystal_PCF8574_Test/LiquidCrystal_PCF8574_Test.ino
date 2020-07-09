@@ -2,6 +2,7 @@
 #include <Wire.h>
 #define LCD_I2CADR  0x4E / 2  //adresse LCD
 
+LiquidCrystal_PCF8574 lcd(LCD_I2CADR); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 int show = -1;
 
