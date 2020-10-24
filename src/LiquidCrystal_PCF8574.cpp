@@ -94,7 +94,13 @@ void LiquidCrystal_PCF8574::home()
 /// Set the cursor to a new position.
 void LiquidCrystal_PCF8574::setCursor(int col, int row)
 {
-  int row_offsets[] = {0x00, 0x40, 0x14, 0x54};
+  int *row_offsets;
+
+  if (this->_lines == 4)
+    row_offsets = new int[4] {0x00, 0x40, 0x10, 0x50};
+  else
+    row_offsets = new int[4] {0x00, 0x40, 0x14, 0x54};
+  
   // Instruction: Set DDRAM address = 0x80
   _send(0x80 | (row_offsets[row] + col));
 } // setCursor()
