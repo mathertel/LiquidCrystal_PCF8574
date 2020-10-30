@@ -33,7 +33,7 @@ LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(int i2cAddr)
 
 void LiquidCrystal_PCF8574::begin(int cols, int lines)
 {
-  (void)cols; // ignored !
+  _cols = cols;
   _lines = lines;
 
   int functionFlags = 0;
@@ -66,6 +66,8 @@ void LiquidCrystal_PCF8574::begin(int cols, int lines)
   display();
   clear();
   leftToRight();
+  
+  _row_offsets = _getRowOffsets();
 } // begin()
 
 
@@ -94,9 +96,8 @@ void LiquidCrystal_PCF8574::home()
 /// Set the cursor to a new position.
 void LiquidCrystal_PCF8574::setCursor(int col, int row)
 {
-  int row_offsets[] = {0x00, 0x40, 0x14, 0x54};
   // Instruction: Set DDRAM address = 0x80
-  _send(0x80 | (row_offsets[row] + col));
+  _send(0x80 | (_row_offsets[row] + col));
 } // setCursor()
 
 
@@ -277,5 +278,25 @@ void LiquidCrystal_PCF8574::_write2Wire(int halfByte, bool isData, bool enable)
   Wire.write(i2cData);
   Wire.endTransmission();
 } // write2Wire
+
+// Prepare row_offsets
+int* LiquidCrystal_PCF8574::_getRowOffsets()
+{
+  int *row_offsets = new int[this->_lines];
+  
+  if (this->_lines > 0)
+    row_offsets[0] = 0x00;
+  else if (this->_lines > 1)
+    row_offsets[1] = 0x40;
+  else if (this->_lines > 2)
+  {
+    for (int i = 0, j = 2; j < this->_lines; i++, j++)
+    {
+       row_offsets[j] = row_offsets[i] + _cols;
+    }
+  }
+  
+  return row_offsets;
+}
 
 // The End.

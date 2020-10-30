@@ -74,11 +74,13 @@ private:
   int _lines; ///< number of lines of the display
   int _entrymode; ///<flags from entrymode
   int _displaycontrol; ///<flags from displaycontrol
-
+  int* _row_offsets;
+  
   // low level functions
   void _send(int value, bool isData = false);
   void _sendNibble(int halfByte, bool isData = false);
   void _write2Wire(int halfByte, bool isData, bool enable);
+  int* _getRowOffsets(); 
 };
 
 #endif
