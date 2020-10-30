@@ -71,16 +71,16 @@ private:
   // instance variables
   int _i2cAddr; ///< Wire Address of the LCD
   int _backlight; ///< the backlight intensity
+  int _cols; ///< number of cols of the display
   int _lines; ///< number of lines of the display
   int _entrymode; ///<flags from entrymode
   int _displaycontrol; ///<flags from displaycontrol
-  int* _row_offsets;
+  int _row_offsets[4];
   
   // low level functions
   void _send(int value, bool isData = false);
   void _sendNibble(int halfByte, bool isData = false);
   void _write2Wire(int halfByte, bool isData, bool enable);
-  int* _getRowOffsets(); 
 };
 
 #endif
