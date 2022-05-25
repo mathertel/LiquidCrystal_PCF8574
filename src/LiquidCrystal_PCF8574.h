@@ -37,18 +37,19 @@ public:
   // There is no sda and scl parameter for i2c in any api.
   // The Wire library has standard settings that can be overwritten by using Wire.begin(int sda, int scl) before calling LiquidCrystal_PCF8574::begin();
 
-  // constructors, which allows to redefine bit assignments in case your adapter is wired differently
+  // constructors, which allow to redefine bit assignments in case your adapter is wired differently
   LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
     uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
   LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
     uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
 
-  // Funtions from reference:
+  // Functions from reference:
 
-  void begin(int cols, int rows);
+  void begin(uint8_t cols, uint8_t rows);
 
+  void clear();
   void home();
-  void setCursor(int col, int row);
+  void setCursor(uint8_t col, uint8_t row);
   void cursor();
   void noCursor();
   void blink();
@@ -61,7 +62,7 @@ public:
   void noAutoscroll();
   void leftToRight();
   void rightToLeft();
-  void createChar(int, byte[]);
+  void createChar(uint8_t, byte[]);
 #ifdef __AVR__
   void createChar_P(uint8_t, const byte *);
   inline void createChar(uint8_t n, const byte *data) {
@@ -70,8 +71,7 @@ public:
 #endif
 
   // plus functions from LCDAPI:
-  void clear();
-  void setBacklight(int brightness);
+  void setBacklight(uint8_t brightness);
   inline void command(uint8_t value) { _send(value); }
 
   // support of Print class
@@ -79,14 +79,14 @@ public:
 
 private:
   // instance variables
-  int _i2cAddr; ///< Wire Address of the LCD
-  int _backlight; ///< the backlight intensity
-  int _cols; ///< number of cols of the display
-  int _lines; ///< number of lines of the display
-  int _entrymode; ///<flags from entrymode
-  int _displaycontrol; ///<flags from displaycontrol
-  int _row_offsets[4];
-  
+  uint8_t _i2cAddr; ///< Wire Address of the LCD
+  uint8_t _backlight; ///< the backlight intensity
+  uint8_t _cols; ///< number of cols of the display
+  uint8_t _lines; ///< number of lines of the display
+  uint8_t _entrymode; ///<flags from entrymode
+  uint8_t _displaycontrol; ///<flags from displaycontrol
+  uint8_t _row_offsets[4];
+
   // variables describing how the PCF8574 is connected to the LCD
   uint8_t _rs_mask;
   uint8_t _rw_mask;
@@ -97,7 +97,7 @@ private:
 
   // low level functions
   void _send(uint8_t value, bool isData = false);
-  void _sendNibble(int halfByte, bool isData = false);
+  void _sendNibble(uint8_t halfByte, bool isData = false);
   void _write2Wire(uint8_t data, bool isData, bool enable);
 
   void init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
