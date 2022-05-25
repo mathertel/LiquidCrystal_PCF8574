@@ -58,6 +58,12 @@ public:
   void leftToRight();
   void rightToLeft();
   void createChar(int, byte[]);
+#ifdef __AVR__
+  void createChar_P(uint8_t, const byte *);
+  inline void createChar(uint8_t n, const byte *data) {
+    createChar_P(n, data);
+  };
+#endif
 
   // plus functions from LCDAPI:
   void clear(); // same as init()
