@@ -267,7 +267,7 @@ void LiquidCrystal_PCF8574::createChar_P(uint8_t location, const byte *charmap) 
     byte c = pgm_read_byte(p++);
     write(c);
   }
-} // createCharPgm()
+} // createChar_P()
 #endif
 
 
@@ -282,18 +282,26 @@ inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
 // write either command or data
 void LiquidCrystal_PCF8574::_send(uint8_t value, bool isData)
 {
+  // An I2C transmission has a significant overhead of ~10+1 I2C clock
+  // cycles. We consequently only perform it only once per _send().
+
+  Wire.beginTransmission(_i2cAddr);
   // write high 4 bits
-  _sendNibble((value >> 4 & 0x0F), isData);
+  _writeNibble((value >> 4 & 0x0F), isData);
   // write low 4 bits
-  _sendNibble((value & 0x0F), isData);
+  _writeNibble((value & 0x0F), isData);
+  Wire.endTransmission();
 } // _send()
 
 
 // write a nibble / halfByte with handshake
-void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
+void LiquidCrystal_PCF8574::_writeNibble(uint8_t halfByte, bool isData)
 {
   // map the data to the given pin connections
-  uint8_t data = 0;
+  uint8_t data = isData ? _rs_mask : 0;
+  // _rw_mask is not used here.
+  if (_backlight > 0)
+    data |= _backlight_mask;
 
   // allow for arbitrary pin configuration
   if (halfByte & 0x01) data |= _data_mask[0];
@@ -301,14 +309,31 @@ void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
   if (halfByte & 0x04) data |= _data_mask[2];
   if (halfByte & 0x08) data |= _data_mask[3];
 
-  _write2Wire(data, isData, true);
-  delayMicroseconds(1); // enable pulse must be >450ns
-  _write2Wire(data, isData, false);
-  delayMicroseconds(37); // commands need > 37us to settle
+  // Note that the specified speed of the PCF8574 chip is 100KHz.
+  // Transmitting a single byte takes 9 clock ticks at 100kHz -> 90us.
+  // The 37us delay is only necessary after sending the second nibble.
+  // But in that case we have to restart the transfer using additional 
+  // >10 clock cycles. Hence, no additional delays are necessary even
+  // when the I2C bus is operated beyond the chip's spec in fast mode
+  // at 400 kHz.
+
+  Wire.write(data | _enable_mask);
+  // delayMicroseconds(1); // enable pulse must be >450ns
+  Wire.write(data);
+  // delayMicroseconds(37); // commands need > 37us to settle
+} // _writeNibble
+
+
+// write a nibble / halfByte with handshake
+void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
+{
+  Wire.beginTransmission(_i2cAddr);
+  _writeNibble(halfByte, isData);
+  Wire.endTransmission();
 } // _sendNibble
 
 
-// private function to change the PCF8674 pins to the given value
+// private function to change the PCF8574 pins to the given value
 void LiquidCrystal_PCF8574::_write2Wire(uint8_t data, bool isData, bool enable)
 {
   if (isData)
