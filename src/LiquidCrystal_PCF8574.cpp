@@ -56,12 +56,12 @@ void LiquidCrystal_PCF8574::init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_
 } // init()
 
 
-void LiquidCrystal_PCF8574::begin(int cols, int lines)
+void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines)
 {
   _cols = min(cols, 80);
   _lines = min(lines, 4);
 
-  int functionFlags = 0;
+  uint8_t functionFlags = 0;
 
   _row_offsets[0] = 0x00;
   _row_offsets[1] = 0x40;
@@ -116,10 +116,10 @@ void LiquidCrystal_PCF8574::home()
 
 
 /// Set the cursor to a new position.
-void LiquidCrystal_PCF8574::setCursor(int col, int row)
+void LiquidCrystal_PCF8574::setCursor(uint8_t col, uint8_t row)
 {
   // check boundaries
-  if ((col >= 0) && (col < _cols) && (row >= 0) && (row < _lines)) {
+  if ((col < _cols) && (row < _lines)) {
     // Instruction: Set DDRAM address = 0x80
     _send(0x80 | (_row_offsets[row] + col));
   }
@@ -235,7 +235,7 @@ void LiquidCrystal_PCF8574::noAutoscroll(void)
 /// Setting the brightness of the background display light.
 /// The backlight can be switched on and off.
 /// The current brightness is stored in the private _backlight variable to have it available for further data transfers.
-void LiquidCrystal_PCF8574::setBacklight(int brightness)
+void LiquidCrystal_PCF8574::setBacklight(uint8_t brightness)
 {
   _backlight = brightness;
   // send no data but set the background-pin right;
@@ -245,12 +245,12 @@ void LiquidCrystal_PCF8574::setBacklight(int brightness)
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
+void LiquidCrystal_PCF8574::createChar(uint8_t location, byte charmap[])
 {
   location &= 0x7; // we only have 8 locations 0-7
   // Set CGRAM address
   _send(0x40 | (location << 3));
-  for (int i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     write(charmap[i]);
   }
 } // createChar()
@@ -290,7 +290,7 @@ void LiquidCrystal_PCF8574::_send(uint8_t value, bool isData)
 
 
 // write a nibble / halfByte with handshake
-void LiquidCrystal_PCF8574::_sendNibble(int halfByte, bool isData)
+void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
 {
   // map the data to the given pin connections
   uint8_t data = 0;
