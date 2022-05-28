@@ -9,7 +9,7 @@
 /// See http://www.mathertel.de/License.aspx
 ///
 /// \details
-/// This library can drive a Liquid Cristal display based on the Hitachi HD44780 chip that is connected 
+/// This library can drive a Liquid Crystal Display (LCD) based on the Hitachi HD44780 chip that is connected 
 /// through a PCF8574 I2C adapter. It uses the original Wire library for communication.
 /// The API if common to many LCD libraries and documented in https://www.arduino.cc/en/Reference/LiquidCrystal.
 /// and partially functions from https://playground.arduino.cc/Code/LCDAPI/.
@@ -19,6 +19,9 @@
 /// --------
 /// * 19.10.2013 created.
 /// * 05.06.2019 rewrite from scratch.
+/// * 26.05.2022 8-bit datatypes in interfaces and compatibility topics.
+/// * 26.05.2022 createChar with PROGMEM character data for AVR processors.
+/// * 26.05.2022 constructor with pin assignments. Thanks to @markisch.
 
 #ifndef LiquidCrystal_PCF8574_h
 #define LiquidCrystal_PCF8574_h
