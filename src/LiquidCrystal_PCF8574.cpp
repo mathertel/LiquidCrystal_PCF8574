@@ -58,8 +58,8 @@ void LiquidCrystal_PCF8574::init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_
 
 void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines)
 {
-  _cols = min(cols, 80);
-  _lines = min(lines, 4);
+  _cols = min(cols, (uint8_t)80);
+  _lines = min(lines, (uint8_t)4);
 
   uint8_t functionFlags = 0;
 
