@@ -101,6 +101,7 @@ private:
   // low level functions
   void _send(uint8_t value, bool isData = false);
   void _sendNibble(uint8_t halfByte, bool isData = false);
+  void _writeNibble(uint8_t halfByte, bool isData);
   void _write2Wire(uint8_t data, bool isData, bool enable);
 
   void init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
