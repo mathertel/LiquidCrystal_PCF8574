@@ -1,5 +1,11 @@
 # Arduino Library for LiquidCrystal displays with I2C PCF8574 adapter
 
+[![Arduino Library Checks](https://github.com/mathertel/LiquidCrystal_PCF8574/actions/workflows/arduino-checks.yml/badge.svg)](https://github.com/mathertel/LiquidCrystal_PCF8574/actions/workflows/arduino-checks.yml)
+
+[![arduino-library-badge](https://www.ardu-badge.com/LiquidCrystal_PCF8574.svg?)](https://www.ardu-badge.com/LiquidCrystal_PCF8574)
+
+<!-- [![GitLicense](https://gitlicense.com/badge/mathertel/LiquidCrystal_PCF8574)](https://gitlicense.com/license/mathertel/LiquidCrystal_PCF8574) -->
+
 A library for driving LiquidCrystal displays (LCD) by using the I2C bus and an PCF8574 I2C adapter.
 
 There are modules that can be soldered or stacked to the display that offers an I2C interface for communication instead of the 8+ digital lines that are used to send data to the display.
