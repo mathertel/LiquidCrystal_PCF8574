@@ -2,9 +2,9 @@
 
 [![Arduino Library Checks](https://github.com/mathertel/LiquidCrystal_PCF8574/actions/workflows/arduino-checks.yml/badge.svg)](https://github.com/mathertel/LiquidCrystal_PCF8574/actions/workflows/arduino-checks.yml)
 
-[![arduino-library-badge](https://www.ardu-badge.com/LiquidCrystal_PCF8574.svg?)](https://www.ardu-badge.com/LiquidCrystal_PCF8574)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/LiquidCrystal_PCF8574.svg?)](https://www.ardu-badge.com/LiquidCrystal_PCF8574)
 
-<!-- [![GitLicense](https://gitlicense.com/badge/mathertel/LiquidCrystal_PCF8574)](https://gitlicense.com/license/mathertel/LiquidCrystal_PCF8574) -->
+[![GitLicense](https://gitlicense.com/badge/mathertel/LiquidCrystal_PCF8574)](https://gitlicense.com/license/mathertel/LiquidCrystal_PCF8574)
 
 A library for driving LiquidCrystal displays (LCD) by using the I2C bus and an PCF8574 I2C adapter.
 
