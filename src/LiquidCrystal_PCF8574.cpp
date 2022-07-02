@@ -10,33 +10,58 @@
 
 #include <Wire.h>
 
-/// Definitions on how the PCF8574 is connected to the LCD
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr)
+{
+  // default pin assignment
+  init(i2cAddr, 0, 1, 2, 4, 5, 6, 7, 3);
+} // LiquidCrystal_PCF8574
 
-/// These are Bit-Masks for the special signals and background light
-#define PCF_RS 0x01
-#define PCF_RW 0x02
-#define PCF_EN 0x04
-#define PCF_BACKLIGHT 0x08
-// the 0xF0 bits are used for 4-bit data to the display.
+// constructors, which allows to redefine bit assignments in case your adapter is wired differently
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
+{
+  init(i2cAddr, rs, 255, enable, d4, d5, d6, d7, backlight);
+} // LiquidCrystal_PCF8574
 
-// a nibble is a half Byte
+LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
+{
+  init(i2cAddr, rs, rw, enable, d4, d5, d6, d7, backlight);
+} // LiquidCrystal_PCF8574
 
-LiquidCrystal_PCF8574::LiquidCrystal_PCF8574(int i2cAddr)
+void LiquidCrystal_PCF8574::init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
+    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight)
 {
   _i2cAddr = i2cAddr;
   _backlight = 0;
 
   _entrymode = 0x02; // like Initializing by Internal Reset Circuit
   _displaycontrol = 0x04;
-} // LiquidCrystal_PCF8574
+
+  _rs_mask = 0x01 << rs;
+  if (rw != 255)
+    _rw_mask = 0x01 << rw;
+  else
+    _rw_mask = 0;
+  _enable_mask = 0x01 << enable;
+  _data_mask[0] = 0x01 << d4;
+  _data_mask[1] = 0x01 << d5;
+  _data_mask[2] = 0x01 << d6;
+  _data_mask[3] = 0x01 << d7;
+
+  if (backlight != 255)
+    _backlight_mask = 0x01 << backlight;
+  else
+    _backlight_mask = 0;
+} // init()
 
 
-void LiquidCrystal_PCF8574::begin(int cols, int lines)
+void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines)
 {
-  _cols = min(cols, 80);
-  _lines = min(lines, 4);
+  _cols = min(cols, (uint8_t)80);
+  _lines = min(lines, (uint8_t)4);
 
-  int functionFlags = 0;
+  uint8_t functionFlags = 0;
 
   _row_offsets[0] = 0x00;
   _row_offsets[1] = 0x40;
@@ -56,7 +81,7 @@ void LiquidCrystal_PCF8574::begin(int cols, int lines)
   _displaycontrol = 0x04;
   _entrymode = 0x02;
 
-  // sequence to reset. see "Initializing by Instruction" in datatsheet
+  // sequence to reset. see "Initializing by Instruction" in datasheet
   _sendNibble(0x03);
   delayMicroseconds(4500);
   _sendNibble(0x03);
@@ -82,12 +107,6 @@ void LiquidCrystal_PCF8574::clear()
 } // clear()
 
 
-void LiquidCrystal_PCF8574::init()
-{
-  clear();
-} // init()
-
-
 void LiquidCrystal_PCF8574::home()
 {
   // Instruction: Return home = 0x02
@@ -97,10 +116,10 @@ void LiquidCrystal_PCF8574::home()
 
 
 /// Set the cursor to a new position.
-void LiquidCrystal_PCF8574::setCursor(int col, int row)
+void LiquidCrystal_PCF8574::setCursor(uint8_t col, uint8_t row)
 {
   // check boundaries
-  if ((col >= 0) && (col < _cols) && (row >= 0) && (row < _lines)) {
+  if ((col < _cols) && (row < _lines)) {
     // Instruction: Set DDRAM address = 0x80
     _send(0x80 | (_row_offsets[row] + col));
   }
@@ -216,7 +235,7 @@ void LiquidCrystal_PCF8574::noAutoscroll(void)
 /// Setting the brightness of the background display light.
 /// The backlight can be switched on and off.
 /// The current brightness is stored in the private _backlight variable to have it available for further data transfers.
-void LiquidCrystal_PCF8574::setBacklight(int brightness)
+void LiquidCrystal_PCF8574::setBacklight(uint8_t brightness)
 {
   _backlight = brightness;
   // send no data but set the background-pin right;
@@ -226,62 +245,107 @@ void LiquidCrystal_PCF8574::setBacklight(int brightness)
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidCrystal_PCF8574::createChar(int location, byte charmap[])
+void LiquidCrystal_PCF8574::createChar(uint8_t location, byte charmap[])
 {
   location &= 0x7; // we only have 8 locations 0-7
   // Set CGRAM address
   _send(0x40 | (location << 3));
-  for (int i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     write(charmap[i]);
   }
 } // createChar()
+
+
+#ifdef __AVR__
+// Allows us to fill the first 8 CGRAM locations
+// with custom characters stored in PROGMEM
+void LiquidCrystal_PCF8574::createChar_P(uint8_t location, const byte *charmap) {
+  PGM_P p = reinterpret_cast<PGM_P>(charmap);
+  location &= 0x7; // we only have 8 locations 0-7
+  _send(0x40 | (location << 3));
+  for (int i = 0; i < 8; i++) {
+    byte c = pgm_read_byte(p++);
+    write(c);
+  }
+} // createChar_P()
+#endif
 
 
 /* The write function is needed for derivation from the Print class. */
 inline size_t LiquidCrystal_PCF8574::write(uint8_t ch)
 {
   _send(ch, true);
-  return 1; // assume sucess
+  return 1; // assume success
 } // write()
 
 
 // write either command or data
-void LiquidCrystal_PCF8574::_send(int value, bool isData)
+void LiquidCrystal_PCF8574::_send(uint8_t value, bool isData)
 {
+  // An I2C transmission has a significant overhead of ~10+1 I2C clock
+  // cycles. We consequently only perform it only once per _send().
+
+  Wire.beginTransmission(_i2cAddr);
   // write high 4 bits
-  _sendNibble((value >> 4 & 0x0F), isData);
+  _writeNibble((value >> 4 & 0x0F), isData);
   // write low 4 bits
-  _sendNibble((value & 0x0F), isData);
+  _writeNibble((value & 0x0F), isData);
+  Wire.endTransmission();
 } // _send()
 
 
 // write a nibble / halfByte with handshake
-void LiquidCrystal_PCF8574::_sendNibble(int halfByte, bool isData)
+void LiquidCrystal_PCF8574::_writeNibble(uint8_t halfByte, bool isData)
 {
-  _write2Wire(halfByte, isData, true);
-  delayMicroseconds(1); // enable pulse must be >450ns
-  _write2Wire(halfByte, isData, false);
-  delayMicroseconds(37); // commands need > 37us to settle
+  // map the data to the given pin connections
+  uint8_t data = isData ? _rs_mask : 0;
+  // _rw_mask is not used here.
+  if (_backlight > 0)
+    data |= _backlight_mask;
+
+  // allow for arbitrary pin configuration
+  if (halfByte & 0x01) data |= _data_mask[0];
+  if (halfByte & 0x02) data |= _data_mask[1];
+  if (halfByte & 0x04) data |= _data_mask[2];
+  if (halfByte & 0x08) data |= _data_mask[3];
+
+  // Note that the specified speed of the PCF8574 chip is 100KHz.
+  // Transmitting a single byte takes 9 clock ticks at 100kHz -> 90us.
+  // The 37us delay is only necessary after sending the second nibble.
+  // But in that case we have to restart the transfer using additional 
+  // >10 clock cycles. Hence, no additional delays are necessary even
+  // when the I2C bus is operated beyond the chip's spec in fast mode
+  // at 400 kHz.
+
+  Wire.write(data | _enable_mask);
+  // delayMicroseconds(1); // enable pulse must be >450ns
+  Wire.write(data);
+  // delayMicroseconds(37); // commands need > 37us to settle
+} // _writeNibble
+
+
+// write a nibble / halfByte with handshake
+void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
+{
+  Wire.beginTransmission(_i2cAddr);
+  _writeNibble(halfByte, isData);
+  Wire.endTransmission();
 } // _sendNibble
 
 
-// private function to change the PCF8674 pins to the given value
-// Note:
-// you may change this function what the display is attached to the PCF8574 in a different wiring.
-void LiquidCrystal_PCF8574::_write2Wire(int halfByte, bool isData, bool enable)
+// private function to change the PCF8574 pins to the given value
+void LiquidCrystal_PCF8574::_write2Wire(uint8_t data, bool isData, bool enable)
 {
-  // map the given values to the hardware of the I2C schema
-  int i2cData = halfByte << 4;
   if (isData)
-    i2cData |= PCF_RS;
-  // PCF_RW is never used.
+    data |= _rs_mask;
+  // _rw_mask is not used here.
   if (enable)
-    i2cData |= PCF_EN;
+    data |= _enable_mask;
   if (_backlight > 0)
-    i2cData |= PCF_BACKLIGHT;
+    data |= _backlight_mask;
 
   Wire.beginTransmission(_i2cAddr);
-  Wire.write(i2cData);
+  Wire.write(data);
   Wire.endTransmission();
 } // write2Wire
 

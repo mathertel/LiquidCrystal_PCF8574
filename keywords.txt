@@ -29,8 +29,10 @@ autoscroll	KEYWORD2
 noAutoscroll	KEYWORD2
 setBacklight	KEYWORD2
 createChar	KEYWORD2
+createChar_P	KEYWORD2
 setCursor	KEYWORD2
 write	KEYWORD2
+command	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
