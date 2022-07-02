@@ -56,8 +56,10 @@ void LiquidCrystal_PCF8574::init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_
 } // init()
 
 
-void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines)
+void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines, TwoWire &wirePort)
 {
+  _i2cPort = &wirePort; //Grab which port the user wants us to use
+
   _cols = min(cols, (uint8_t)80);
   _lines = min(lines, (uint8_t)4);
 
@@ -73,7 +75,7 @@ void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines)
   }
 
   // initializing the display
-  Wire.begin();
+  _i2cPort->begin();
   _write2Wire(0x00, LOW, false);
   delayMicroseconds(50000);
 
@@ -245,7 +247,7 @@ void LiquidCrystal_PCF8574::setBacklight(uint8_t brightness)
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidCrystal_PCF8574::createChar(uint8_t location, byte charmap[])
+void LiquidCrystal_PCF8574::createChar(uint8_t location, uint8_t charmap[])
 {
   location &= 0x7; // we only have 8 locations 0-7
   // Set CGRAM address
@@ -259,12 +261,12 @@ void LiquidCrystal_PCF8574::createChar(uint8_t location, byte charmap[])
 #ifdef __AVR__
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters stored in PROGMEM
-void LiquidCrystal_PCF8574::createChar_P(uint8_t location, const byte *charmap) {
+void LiquidCrystal_PCF8574::createChar_P(uint8_t location, const uint8_t *charmap) {
   PGM_P p = reinterpret_cast<PGM_P>(charmap);
   location &= 0x7; // we only have 8 locations 0-7
   _send(0x40 | (location << 3));
   for (int i = 0; i < 8; i++) {
-    byte c = pgm_read_byte(p++);
+    uint8_t c = pgm_read_byte(p++);
     write(c);
   }
 } // createChar_P()
@@ -285,12 +287,12 @@ void LiquidCrystal_PCF8574::_send(uint8_t value, bool isData)
   // An I2C transmission has a significant overhead of ~10+1 I2C clock
   // cycles. We consequently only perform it only once per _send().
 
-  Wire.beginTransmission(_i2cAddr);
+  _i2cPort->beginTransmission(_i2cAddr);
   // write high 4 bits
   _writeNibble((value >> 4 & 0x0F), isData);
   // write low 4 bits
   _writeNibble((value & 0x0F), isData);
-  Wire.endTransmission();
+  _i2cPort->endTransmission();
 } // _send()
 
 
@@ -317,9 +319,9 @@ void LiquidCrystal_PCF8574::_writeNibble(uint8_t halfByte, bool isData)
   // when the I2C bus is operated beyond the chip's spec in fast mode
   // at 400 kHz.
 
-  Wire.write(data | _enable_mask);
+  _i2cPort->write(data | _enable_mask);
   // delayMicroseconds(1); // enable pulse must be >450ns
-  Wire.write(data);
+  _i2cPort->write(data);
   // delayMicroseconds(37); // commands need > 37us to settle
 } // _writeNibble
 
@@ -327,9 +329,9 @@ void LiquidCrystal_PCF8574::_writeNibble(uint8_t halfByte, bool isData)
 // write a nibble / halfByte with handshake
 void LiquidCrystal_PCF8574::_sendNibble(uint8_t halfByte, bool isData)
 {
-  Wire.beginTransmission(_i2cAddr);
+  _i2cPort->beginTransmission(_i2cAddr);
   _writeNibble(halfByte, isData);
-  Wire.endTransmission();
+  _i2cPort->endTransmission();
 } // _sendNibble
 
 
@@ -344,9 +346,9 @@ void LiquidCrystal_PCF8574::_write2Wire(uint8_t data, bool isData, bool enable)
   if (_backlight > 0)
     data |= _backlight_mask;
 
-  Wire.beginTransmission(_i2cAddr);
-  Wire.write(data);
-  Wire.endTransmission();
+  _i2cPort->beginTransmission(_i2cAddr);
+  _i2cPort->write(data);
+  _i2cPort->endTransmission();
 } // write2Wire
 
 // The End.

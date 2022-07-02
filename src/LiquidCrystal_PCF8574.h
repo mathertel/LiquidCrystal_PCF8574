@@ -27,6 +27,7 @@
 #define LiquidCrystal_PCF8574_h
 
 #include "Arduino.h"
+#include <Wire.h>	
 #include "Print.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -40,6 +41,26 @@ public:
   // There is no sda and scl parameter for i2c in any api.
   // The Wire library has standard settings that can be overwritten by using Wire.begin(int sda, int scl) before calling LiquidCrystal_PCF8574::begin();
 
+	// When using multiple I2C ports one can initialize with
+  //   LiquidCrystal_PCF8574 lcd(0x27);     // create lcd
+  //   TwoWire myWire = TwoWire();          // create new wire instance
+  //   myWire.begin(sdaPin, sclPin);        // define SDA and SCL pins
+  //   myWire.setClock(100000);             // I2C speed 100kHz
+  //   myWire.setClockStretchLimit(200000); // I2C clock stretch to 200ms for slow devices
+  //   lcd_port = &myWire;                  // Keep address to wire instance
+  //   lcd.begin(clos, rows, *lcd_port);    // Initialize lcd
+  //
+  // and in the main program update display with
+  //   # if defined(ESP8266)
+  //     Although we created multiple wire ports, in ESP8266 there is only one wire structure available
+  //     Each time we switch to different i2c port we need to switch the pins
+  //     lcd_port->begin(sdaPin, sclPin);     
+  //     lcd_port->setClock(100000);
+  //     lcd_port->setClockStretchLimit(200000); // 200ms, for slow devices
+  //   # endif
+  //   lcd.setCursor(0, 0); 
+  //   lcd.print(lcdbuf);
+
   // constructors, which allow to redefine bit assignments in case your adapter is wired differently
   LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
     uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
@@ -48,7 +69,7 @@ public:
 
   // Functions from reference:
 
-  void begin(uint8_t cols, uint8_t rows);
+  void begin(uint8_t cols, uint8_t rows, TwoWire &wirePort = Wire);
 
   void clear();
   void home();
@@ -65,10 +86,10 @@ public:
   void noAutoscroll();
   void leftToRight();
   void rightToLeft();
-  void createChar(uint8_t, byte[]);
+  void createChar(uint8_t location, uint8_t charmap[]);
 #ifdef __AVR__
-  void createChar_P(uint8_t, const byte *);
-  inline void createChar(uint8_t n, const byte *data) {
+  void createChar_P(uint8_t, const uint8_t *);
+  inline void createChar(uint8_t n, const uint8_t *data) {
     createChar_P(n, data);
   };
 #endif
@@ -81,6 +102,9 @@ public:
   virtual size_t write(uint8_t ch);
 
 private:
+
+  TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
+
   // instance variables
   uint8_t _i2cAddr; ///< Wire Address of the LCD
   uint8_t _backlight; ///< the backlight intensity
