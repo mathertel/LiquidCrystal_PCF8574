@@ -38,9 +38,7 @@ class LiquidCrystal_PCF8574 : public Print
 public:
   LiquidCrystal_PCF8574(uint8_t i2cAddr);
   // note:
-  // There is no sda and scl parameter for i2c in any api.
-  // The Wire library has standard settings that can be overwritten by using Wire.begin(int sda, int scl) before calling LiquidCrystal_PCF8574::begin();
-
+  //
 	// When using multiple I2C ports one can initialize with
   //   LiquidCrystal_PCF8574 lcd(0x27);     // create lcd
   //   TwoWire myWire = TwoWire();          // create new wire instance
@@ -50,10 +48,11 @@ public:
   //   lcd_port = &myWire;                  // Keep address to wire instance
   //   lcd.begin(clos, rows, *lcd_port);    // Initialize lcd
   //
-  // and in the main program update display with
+  // and in the main program one updates display with
   //   # if defined(ESP8266)
-  //     Although we created multiple wire ports, in ESP8266 there is only one wire structure available
-  //     Each time we switch to different i2c port we need to switch the pins
+  //     ESP8266 is special case because there is only one wire structure available
+  //     Although we can created multiple wire interfaces we still need to specify SDA and SCL 
+  //     before each transmission:
   //     lcd_port->begin(sdaPin, sclPin);     
   //     lcd_port->setClock(100000);
   //     lcd_port->setClockStretchLimit(200000); // 200ms, for slow devices

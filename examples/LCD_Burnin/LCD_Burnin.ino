@@ -45,5 +45,5 @@ void loop()
   strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0';
   lcd.print(lcdbuf);
 
-  delay(50); // keep artitically short to test if screen corrupts with frequent writes
+  delay(50); // keep artifically short to test if screen corrupts with frequent writes
 }
