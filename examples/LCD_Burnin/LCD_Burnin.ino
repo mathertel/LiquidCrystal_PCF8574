@@ -1,9 +1,11 @@
 // LCD with i2c backpack test
-// This replaces the contents of an LCD screen with the contents of a buffer
+// This example shows how to transfer an in-memory buffer to the LCD at once.
+// A TwoWire instance is given as a parameter to lcd.begin to show how to pass a non default wire interface.
 // Urs Utzinger, 2020
 
-#include "LiquidCrystal_PCF8574.h"
+#include <Arduino.h>
 #include <Wire.h>
+#include "LiquidCrystal_PCF8574.h"
 
 TwoWire Wire_1 = TwoWire();
 
@@ -45,5 +47,5 @@ void loop()
   strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0';
   lcd.print(lcdbuf);
 
-  delay(50); // keep artifically short to test if screen corrupts with frequent writes
+  delay(50); // keep short to test if screen corrupts with frequent writes
 }

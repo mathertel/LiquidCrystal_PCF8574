@@ -15,10 +15,19 @@ If you use a module with a different wiring, you can use one of the class constr
 
 See the web site for more details and pictures: <https://www.mathertel.de/Arduino/LiquidCrystal_PCF8574.aspx>
 
+## Changes Version 2.1.0 (2022-08-21)
+
+Enables using a non-default i2c / TwoWire port for boards that support multiple ports.
+
+Added example `LCD_Burnin.ino` showing how to transfer a 20 char and 4 lines buffer to a device all at once.
+
+Thanks for additions from @uutzinger
+
+
 ## Changes Version 2.0.0 (2022-05-26)
 
 * The interface was modified to use 8-bit datatypes as supported by the underling hardware.
 * A createChar version with PROGMEM character data for AVR processors was added.
 * A constructor with pin assignments was added to allow easy adoption to other wirings than the default.
 
-Thanks to additions from @markisch.
+Thanks for additions from @markisch.
