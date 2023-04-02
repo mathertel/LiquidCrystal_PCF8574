@@ -36,7 +36,7 @@
 class LiquidCrystal_PCF8574 : public Print
 {
 public:
-  LiquidCrystal_PCF8574(uint8_t i2cAddr);
+  LiquidCrystal_PCF8574(uint8_t i2cAddr=0x27);
   // note:
   //
 	// When using multiple I2C ports one can initialize with
