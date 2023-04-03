@@ -20,13 +20,13 @@ The default i2c address 0x27 is set as default parameter.
 You can use an explicit i2c address with
 
 ``` cpp
-LiquidCrystal_PCF8574 lcd(0x22);  // set the LCD address to 0x27 
+LiquidCrystal_PCF8574 lcd(0x22);  // set the LCD address to 0x22
 ```
 
 or you can rely on the default i2c address = 0x27 with
 
 ``` cpp
-LiquidCrystal_PCF8574 lcd();  // use the default LCD address == 0x27 
+LiquidCrystal_PCF8574 lcd();  // use the default LCD address == 0x27
 ```
 
 See datasheet of PCF8574 (and PCF8574A) for further info on usable i2c addresses.
