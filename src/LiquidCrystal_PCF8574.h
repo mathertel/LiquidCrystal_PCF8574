@@ -9,10 +9,14 @@
 /// See http://www.mathertel.de/License.aspx
 ///
 /// \details
-/// This library can drive a Liquid Crystal Display (LCD) based on the Hitachi HD44780 chip that is connected 
-/// through a PCF8574 I2C adapter. It uses the original Wire library for communication.
-/// The API if common to many LCD libraries and documented in https://www.arduino.cc/en/Reference/LiquidCrystal.
-/// and partially functions from https://playground.arduino.cc/Code/LCDAPI/.
+/// This library can drive a Liquid Crystal Display (LCD) based on the Hitachi HD44780 chip
+/// that is connected through a PCF8574 I2C adapter.
+///
+/// The API for this library is common to many LCD libraries and documented in
+/// https://www.arduino.cc/en/Reference/LiquidCrystal. and partially functions from the LCD
+/// API at https://playground.arduino.cc/Code/LCDAPI/.
+///
+/// By Default it uses the original Wire library for communication.
 
 ///
 /// ChangeLog:
@@ -22,24 +26,41 @@
 /// * 26.05.2022 8-bit datatypes in interfaces and compatibility topics.
 /// * 26.05.2022 createChar with PROGMEM character data for AVR processors.
 /// * 26.05.2022 constructor with pin assignments. Thanks to @markisch.
+/// * 26.05.2022 isConnected() function to check if the LCD is connected and responding. Thanks to @Mr-HaleYa.
 
 #ifndef LiquidCrystal_PCF8574_h
 #define LiquidCrystal_PCF8574_h
 
 #include "Arduino.h"
-#include <Wire.h>	
+#include <Wire.h>
 #include "Print.h"
 #include <stddef.h>
 #include <stdint.h>
 
-
-class LiquidCrystal_PCF8574 : public Print
-{
+/**
+ * @class LiquidCrystal_PCF8574
+ * @brief LCD display driver for PCF8574 I2C backpack
+ *
+ * This class provides an interface to control a 16x2 or 20x4 LCD display
+ * connected via a PCF8574 I2C I/O expander. It extends the Print class,
+ * allowing text output using print() and println() methods.
+ *
+ * @details
+ * The LiquidCrystal_PCF8574 class supports:
+ * - I2C communication via TwoWire interface
+ * - Configurable I2C address and pin assignments
+ * - Multiple I2C bus support (including ESP8266)
+ * - Backlight brightness control
+ * - Text cursor and display control
+ * - Custom character creation
+ * - 4-bit data mode communication with standard LCD controllers
+ */
+class LiquidCrystal_PCF8574 : public Print {
 public:
-  LiquidCrystal_PCF8574(uint8_t i2cAddr=0x27);
+  LiquidCrystal_PCF8574(uint8_t i2cAddr = 0x27);
   // note:
   //
-	// When using multiple I2C ports one can initialize with
+  // When using multiple I2C ports one can initialize with
   //   LiquidCrystal_PCF8574 lcd(0x27);     // create lcd
   //   TwoWire myWire = TwoWire();          // create new wire instance
   //   myWire.begin(sdaPin, sclPin);        // define SDA and SCL pins
@@ -51,26 +72,25 @@ public:
   // and in the main program one updates display with
   //   # if defined(ESP8266)
   //     ESP8266 is special case because there is only one wire structure available
-  //     Although we can created multiple wire interfaces we still need to specify SDA and SCL 
+  //     Although we can created multiple wire interfaces we still need to specify SDA and SCL
   //     before each transmission:
-  //     lcd_port->begin(sdaPin, sclPin);     
+  //     lcd_port->begin(sdaPin, sclPin);
   //     lcd_port->setClock(100000);
   //     lcd_port->setClockStretchLimit(200000); // 200ms, for slow devices
   //   # endif
-  //   lcd.setCursor(0, 0); 
+  //   lcd.setCursor(0, 0);
   //   lcd.print(lcdbuf);
 
   // constructors, which allow to redefine bit assignments in case your adapter is wired differently
   LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t enable,
-    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
+                        uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight = 255);
   LiquidCrystal_PCF8574(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
-    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
+                        uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight = 255);
 
   // Functions from reference:
 
   void begin(uint8_t cols, uint8_t rows, TwoWire &wirePort = Wire);
 
-  bool isConnected();
   void clear();
   void home();
   void setCursor(uint8_t col, uint8_t row);
@@ -96,22 +116,28 @@ public:
 
   // plus functions from LCDAPI:
   void setBacklight(uint8_t brightness);
-  inline void command(uint8_t value) { _send(value); }
+  inline void command(uint8_t value) {
+    _send(value);
+  }
 
   // support of Print class
   virtual size_t write(uint8_t ch);
 
-private:
+  // additional functions
 
-  TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
+  /// Check if the LCD display is connected and responsive via I2C.
+  bool isConnected();
+
+private:
+  TwoWire *_i2cPort;  // The generic connection to user's chosen I2C hardware
 
   // instance variables
-  uint8_t _i2cAddr; ///< Wire Address of the LCD
-  uint8_t _backlight; ///< the backlight intensity
-  uint8_t _cols; ///< number of cols of the display
-  uint8_t _lines; ///< number of lines of the display
-  uint8_t _entrymode; ///<flags from entrymode
-  uint8_t _displaycontrol; ///<flags from displaycontrol
+  uint8_t _i2cAddr;         ///< Wire Address of the LCD
+  uint8_t _backlight;       ///< the backlight intensity
+  uint8_t _cols;            ///< number of cols of the display
+  uint8_t _lines;           ///< number of lines of the display
+  uint8_t _entrymode;       ///< flags from entrymode
+  uint8_t _displaycontrol;  ///< flags from displaycontrol
   uint8_t _row_offsets[4];
 
   // variables describing how the PCF8574 is connected to the LCD
@@ -129,7 +155,7 @@ private:
   void _write2Wire(uint8_t data, bool isData, bool enable);
 
   void init(uint8_t i2cAddr, uint8_t rs, uint8_t rw, uint8_t enable,
-    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight=255);
+            uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7, uint8_t backlight = 255);
 };
 
 #endif
