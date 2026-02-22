@@ -70,6 +70,7 @@ public:
 
   void begin(uint8_t cols, uint8_t rows, TwoWire &wirePort = Wire);
 
+  bool isConnected();
   void clear();
   void home();
   void setCursor(uint8_t col, uint8_t row);

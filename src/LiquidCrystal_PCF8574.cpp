@@ -101,6 +101,13 @@ void LiquidCrystal_PCF8574::begin(uint8_t cols, uint8_t lines, TwoWire &wirePort
 } // begin()
 
 
+bool LiquidCrystal_PCF8574::isConnected()
+{
+  _i2cPort->beginTransmission(_i2cAddr);
+  return (_i2cPort->endTransmission() == 0);
+} // isConnected()
+
+
 void LiquidCrystal_PCF8574::clear()
 {
   // Instruction: Clear display = 0x01
